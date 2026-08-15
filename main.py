@@ -39,4 +39,15 @@ async def leaderboard(interaction: discord.Interaction, game: str):
     await interaction.response.send_message(embed=embed)
 
 
+@client.tree.command(
+    name="profile", description="Brings up your profile", guild=GUILD_ID
+)
+async def profile(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title=f"{interaction.user.name}'s Profile", description=f"coming soon!"
+    )
+    embed.set_author(name=interaction.user.name)
+    await interaction.response.send_message(embed=embed)
+
+
 client.run(BOT_TOKEN)
