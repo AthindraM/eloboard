@@ -33,7 +33,10 @@ GUILD_ID = discord.Object(id=1065303021925453835)
     name="leaderboard", description="Brings up the leaderboard", guild=GUILD_ID
 )
 async def leaderboard(interaction: discord.Interaction, game: str):
-    await interaction.response.send_message(f"{game} leaderboard coming soon!")
+    embed = discord.Embed(
+        title=f"{game} Leaderboard", description=f"{game} leaderboard coming soon!"
+    )
+    await interaction.response.send_message(embed=embed)
 
 
 client.run(BOT_TOKEN)
