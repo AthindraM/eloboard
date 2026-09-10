@@ -91,6 +91,7 @@ async def league_stats(interaction: discord.Interaction, game_name: str, tagline
     await interaction.response.send_message(embed=embed)
 
 
+# --Profile & Account--
 @client.tree.command(
     name="create_profile",
     description="Creates a profile for your accounts",
@@ -136,13 +137,44 @@ async def unlink_account(interaction: discord.Interaction):
     await interaction.response.send_message("coming soon!")
 
 
+# --Leaderboard--
+class Leaderboard(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label="League of Legends", description="Brings up the LoL leaderboard"
+            ),
+            discord.SelectOption(
+                label="Valorant", description="Brings up the Valorant leaderboard"
+            ),
+        ]
+
+        super().__init__(
+            placeholder="Please choose a game:",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            f"You picked {self.values[0]}\ncoming soon!"
+        )
+
+
+class LeaderboardView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(Leaderboard())
+
+
 @client.tree.command(
     name="leaderboard",
     description="Brings up the leaderboard of a game",
     guild=GUILD_ID,
 )
 async def leaderboard(interaction: discord.Interaction):
-    await interaction.response.send_message("coming soon!")
+    await interaction.response.send_message(view=LeaderboardView())
 
 
 client.run(DISCORD_BOT_TOKEN)
