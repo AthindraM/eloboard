@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from bot_token import BOT_TOKEN
+from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY
 
 
 class Client(commands.Bot):
@@ -50,4 +50,4 @@ async def profile(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
-client.run(BOT_TOKEN)
+client.run(DISCORD_BOT_TOKEN)
