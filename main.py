@@ -85,6 +85,8 @@ async def profile(interaction: discord.Interaction, game_name: str, tagline: str
     soloduo_rank = get_soloduo_rank(rank_info)
     flex_rank = get_flex_rank(rank_info)
 
+    game_name = game_name.replace(" ", "")
+
     embed = discord.Embed(
         title=f"{game_name}#{tagline}'s OP.gg",
         url=f"https://op.gg/lol/summoners/na/{game_name}-{tagline}",
