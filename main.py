@@ -49,7 +49,9 @@ async def profile(interaction: discord.Interaction, game_name: str, tagline: str
         url=f"https://op.gg/lol/summoners/na/{game_name}-{tagline}",
     )
     embed.set_author(name=interaction.user.name)
-    embed.add_field(name="Rank", value=f"")
+    embed.add_field(
+        name="Overall Stats", value=f"Rank: \nWin Rate: \nHighest Mastery: "
+    )
     await interaction.response.send_message(embed=embed)
 
 
