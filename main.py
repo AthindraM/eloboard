@@ -68,11 +68,11 @@ GUILD_ID = discord.Object(id=1065303021925453835)
 
 
 @client.tree.command(
-    name="leagueStats",
+    name="league_stats",
     description="Brings up your League of Legends stats",
     guild=GUILD_ID,
 )
-async def leagueStats(interaction: discord.Interaction, game_name: str, tagline: str):
+async def league_stats(interaction: discord.Interaction, game_name: str, tagline: str):
     author_puuid = get_puuid(game_name, tagline)
     rank_info = get_rank_info(author_puuid)
     soloduo_rank = get_soloduo_rank(rank_info)
@@ -92,20 +92,20 @@ async def leagueStats(interaction: discord.Interaction, game_name: str, tagline:
 
 
 @client.tree.command(
-    name="createProfile",
+    name="create_profile",
     description="Creates a profile for your accounts",
     guild=GUILD_ID,
 )
-async def createProfile(interaction: discord.Interaction):
+async def create_profile(interaction: discord.Interaction):
     await interaction.response.send_message("coming soon!")
 
 
 @client.tree.command(
-    name="removeProfile",
+    name="remove_profile",
     description="Removes your profile",
     guild=GUILD_ID,
 )
-async def removeProfile(interaction: discord.Interaction):
+async def remove_profile(interaction: discord.Interaction):
     await interaction.response.send_message("coming soon!")
 
 
@@ -119,20 +119,20 @@ async def profile(interaction: discord.Interaction):
 
 
 @client.tree.command(
-    name="linkAccount",
+    name="link_account",
     description="Link a game account to your profile",
     guild=GUILD_ID,
 )
-async def linkAccount(interaction: discord.Interaction):
+async def link_account(interaction: discord.Interaction):
     await interaction.response.send_message("coming soon!")
 
 
 @client.tree.command(
-    name="unlinkAccount",
+    name="unlink_account",
     description="Unlink a game account from your profile",
     guild=GUILD_ID,
 )
-async def unlinkAccount(interaction: discord.Interaction):
+async def unlink_account(interaction: discord.Interaction):
     await interaction.response.send_message("coming soon!")
 
 
