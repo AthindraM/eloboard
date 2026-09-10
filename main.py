@@ -1,4 +1,5 @@
 import requests
+import json
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -7,12 +8,36 @@ from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY
 
 
 def get_puuid(game_name, tagline):
-    api_url = f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tagline}?api_key={RIOT_API_KEY}"
-    response = requests.get(api_url)
+    response = requests.get(
+        f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tagline}?api_key={RIOT_API_KEY}"
+    )
     player_info = response.json()
     puuid = player_info["puuid"]
 
     return puuid
+
+
+def get_rank_info(puuid):
+    response = requests.get(
+        f"https://na1.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}?api_key={RIOT_API_KEY}"
+    )
+    rank_info = response.json()
+
+    return rank_info
+
+
+def get_soloduo_rank(rank_info):
+    entry = next((e for e in rank_info if e["queueType"] == "RANKED_SOLO_5x5"), None)
+    if entry is None:
+        return "Unranked"
+    return f"{entry['tier']} {entry['rank']} {entry['leaguePoints']} LP"
+
+
+def get_flex_rank(rank_info):
+    entry = next((e for e in rank_info if e["queueType"] == "RANKED_FLEX_SR"), None)
+    if entry is None:
+        return "Unranked"
+    return f"{entry['tier']} {entry['rank']} {entry['leaguePoints']} LP"
 
 
 # --- BOT SETUP ---
@@ -56,13 +81,17 @@ async def leaderboard(interaction: discord.Interaction, game: str):
 )
 async def profile(interaction: discord.Interaction, game_name: str, tagline: str):
     author_puuid = get_puuid(game_name, tagline)
+    rank_info = get_rank_info(author_puuid)
+    soloduo_rank = get_soloduo_rank(rank_info)
+    flex_rank = get_flex_rank(rank_info)
+
     embed = discord.Embed(
         title=f"{game_name}#{tagline}'s OP.gg",
         url=f"https://op.gg/lol/summoners/na/{game_name}-{tagline}",
     )
     embed.set_author(name=interaction.user.name)
     embed.add_field(
-        name="Overall Stats", value=f"Rank: \nWin Rate: \nHighest Mastery: "
+        name="Ranked Stats", value=f"Solo/Duo: {soloduo_rank}\nFlex: {flex_rank}"
     )
     await interaction.response.send_message(embed=embed)
 
