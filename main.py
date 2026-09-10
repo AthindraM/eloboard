@@ -1,3 +1,4 @@
+import requests
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -5,6 +6,16 @@ from discord import app_commands
 from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY
 
 
+def get_puuid(game_name, tagline):
+    api_url = f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tagline}?api_key={RIOT_API_KEY}"
+    response = requests.get(api_url)
+    player_info = response.json()
+    puuid = player_info["puuid"]
+
+    return puuid
+
+
+# --- BOT SETUP ---
 class Client(commands.Bot):
     async def on_ready(self):
         print(f"Logged on as {self.user}")
@@ -22,7 +33,7 @@ class Client(commands.Bot):
             return
 
 
-# COMMANDS
+# --- COMMANDS ---
 intents = discord.Intents.default()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
@@ -44,6 +55,7 @@ async def leaderboard(interaction: discord.Interaction, game: str):
     name="profile", description="Brings up your profile", guild=GUILD_ID
 )
 async def profile(interaction: discord.Interaction, game_name: str, tagline: str):
+    author_puuid = get_puuid(game_name, tagline)
     embed = discord.Embed(
         title=f"{game_name}#{tagline}'s OP.gg",
         url=f"https://op.gg/lol/summoners/na/{game_name}-{tagline}",
