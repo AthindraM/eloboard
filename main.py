@@ -7,6 +7,7 @@ from discord import app_commands
 from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY
 
 
+# --- RIOT API REQS ---
 def get_puuid(game_name, tagline):
     response = requests.get(
         f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tagline}?api_key={RIOT_API_KEY}"
@@ -67,19 +68,11 @@ GUILD_ID = discord.Object(id=1065303021925453835)
 
 
 @client.tree.command(
-    name="leaderboard", description="Brings up the leaderboard", guild=GUILD_ID
+    name="leagueStats",
+    description="Brings up your League of Legends stats",
+    guild=GUILD_ID,
 )
-async def leaderboard(interaction: discord.Interaction, game: str):
-    embed = discord.Embed(
-        title=f"{game} Leaderboard", description=f"{game} leaderboard coming soon!"
-    )
-    await interaction.response.send_message(embed=embed)
-
-
-@client.tree.command(
-    name="profile", description="Brings up your profile", guild=GUILD_ID
-)
-async def profile(interaction: discord.Interaction, game_name: str, tagline: str):
+async def leagueStats(interaction: discord.Interaction, game_name: str, tagline: str):
     author_puuid = get_puuid(game_name, tagline)
     rank_info = get_rank_info(author_puuid)
     soloduo_rank = get_soloduo_rank(rank_info)
@@ -96,6 +89,60 @@ async def profile(interaction: discord.Interaction, game_name: str, tagline: str
         name="Ranked Stats", value=f"Solo/Duo: {soloduo_rank}\nFlex: {flex_rank}"
     )
     await interaction.response.send_message(embed=embed)
+
+
+@client.tree.command(
+    name="createProfile",
+    description="Creates a profile for your accounts",
+    guild=GUILD_ID,
+)
+async def createProfile(interaction: discord.Interaction):
+    await interaction.response.send_message("coming soon!")
+
+
+@client.tree.command(
+    name="removeProfile",
+    description="Removes your profile",
+    guild=GUILD_ID,
+)
+async def removeProfile(interaction: discord.Interaction):
+    await interaction.response.send_message("coming soon!")
+
+
+@client.tree.command(
+    name="profile",
+    description="Shows your profile stats and linked accounts",
+    guild=GUILD_ID,
+)
+async def profile(interaction: discord.Interaction):
+    await interaction.response.send_message("coming soon!")
+
+
+@client.tree.command(
+    name="linkAccount",
+    description="Link a game account to your profile",
+    guild=GUILD_ID,
+)
+async def linkAccount(interaction: discord.Interaction):
+    await interaction.response.send_message("coming soon!")
+
+
+@client.tree.command(
+    name="unlinkAccount",
+    description="Unlink a game account from your profile",
+    guild=GUILD_ID,
+)
+async def unlinkAccount(interaction: discord.Interaction):
+    await interaction.response.send_message("coming soon!")
+
+
+@client.tree.command(
+    name="leaderboard",
+    description="Brings up the leaderboard of a game",
+    guild=GUILD_ID,
+)
+async def leaderboard(interaction: discord.Interaction):
+    await interaction.response.send_message("coming soon!")
 
 
 client.run(DISCORD_BOT_TOKEN)
