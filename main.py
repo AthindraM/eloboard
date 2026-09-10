@@ -22,6 +22,7 @@ class Client(commands.Bot):
             return
 
 
+# COMMANDS
 intents = discord.Intents.default()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
@@ -42,11 +43,13 @@ async def leaderboard(interaction: discord.Interaction, game: str):
 @client.tree.command(
     name="profile", description="Brings up your profile", guild=GUILD_ID
 )
-async def profile(interaction: discord.Interaction):
+async def profile(interaction: discord.Interaction, game_name: str, tagline: str):
     embed = discord.Embed(
-        title=f"{interaction.user.name}'s Profile", description=f"coming soon!"
+        title=f"{game_name}#{tagline}'s OP.gg",
+        url=f"https://op.gg/lol/summoners/na/{game_name}-{tagline}",
     )
     embed.set_author(name=interaction.user.name)
+    embed.add_field(name="Rank", value=f"")
     await interaction.response.send_message(embed=embed)
 
 
