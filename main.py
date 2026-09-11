@@ -1,10 +1,10 @@
 import requests
-import json
+import db
 import discord
 from discord.ext import commands
 from discord import app_commands
 
-from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY
+from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY, POSTGRES_DSN
 
 
 # --- RIOT API REQS ---
@@ -43,6 +43,9 @@ def get_flex_rank(rank_info):
 
 # --- BOT SETUP ---
 class Client(commands.Bot):
+    async def setup_hook(self):
+        await db.init_db(POSTGRES_DSN)
+
     async def on_ready(self):
         print(f"Logged on as {self.user}")
 
@@ -53,6 +56,10 @@ class Client(commands.Bot):
 
         except Exception as e:
             print(f"Error syncing commands: {e}")
+
+    async def close(self):
+        await db.close_db()
+        await super().close()
 
     async def on_message(self, message):
         if message.author == self.user:
