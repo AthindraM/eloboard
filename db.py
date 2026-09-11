@@ -3,6 +3,12 @@ import asyncpg
 _pool: asyncpg.Pool | None = None
 
 
+def _get_pool() -> asyncpg.Pool:
+    if _pool is None:
+        raise RuntimeError("Database pool not initialized. Call init_db() first.")
+    return _pool
+
+
 async def init_db(dsn: str):
     global _pool
     _pool = await asyncpg.create_pool(dsn=dsn, min_size=1, max_size=10)
@@ -33,7 +39,7 @@ async def close_db():
 
 
 async def create_profile(discord_id: int, username: str) -> bool:
-    async with _pool.acquire() as conn:
+    async with _get_pool().acquire() as conn:
         result = await conn.execute(
             """
             INSERT INTO profiles (discord_id, username)
@@ -47,7 +53,7 @@ async def create_profile(discord_id: int, username: str) -> bool:
 
 
 async def remove_profile(discord_id: int) -> bool:
-    async with _pool.acquire() as conn:
+    async with _get_pool().acquire() as conn:
         # linked_accounts rows are auto-removed via ON DELETE CASCADE
         result = await conn.execute(
             "DELETE FROM profiles WHERE discord_id = $1", discord_id
@@ -56,7 +62,7 @@ async def remove_profile(discord_id: int) -> bool:
 
 
 async def get_profile(discord_id: int) -> dict | None:
-    async with _pool.acquire() as conn:
+    async with _get_pool().acquire() as conn:
         row = await conn.fetchrow(
             "SELECT discord_id, username FROM profiles WHERE discord_id = $1",
             discord_id,
@@ -65,9 +71,9 @@ async def get_profile(discord_id: int) -> dict | None:
 
 
 async def link_account(
-    discord_id: int, game: str, game_name: str, tagline: str, puuid: str = None
+    discord_id: int, game: str, game_name: str, tagline: str, puuid: str | None = None
 ):
-    async with _pool.acquire() as conn:
+    async with _get_pool().acquire() as conn:
         await conn.execute(
             """
             INSERT INTO linked_accounts (discord_id, game, game_name, tagline, puuid)
@@ -86,7 +92,7 @@ async def link_account(
 
 
 async def unlink_account(discord_id: int, game: str) -> bool:
-    async with _pool.acquire() as conn:
+    async with _get_pool().acquire() as conn:
         result = await conn.execute(
             "DELETE FROM linked_accounts WHERE discord_id = $1 AND game = $2",
             discord_id,
@@ -96,7 +102,7 @@ async def unlink_account(discord_id: int, game: str) -> bool:
 
 
 async def get_linked_accounts(discord_id: int) -> list[dict]:
-    async with _pool.acquire() as conn:
+    async with _get_pool().acquire() as conn:
         rows = await conn.fetch(
             "SELECT game, game_name, tagline, puuid FROM linked_accounts WHERE discord_id = $1",
             discord_id,

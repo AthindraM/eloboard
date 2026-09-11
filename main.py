@@ -105,7 +105,13 @@ async def league_stats(interaction: discord.Interaction, game_name: str, tagline
     guild=GUILD_ID,
 )
 async def create_profile(interaction: discord.Interaction):
-    await interaction.response.send_message("coming soon!")
+    created = await db.create_profile(interaction.user.id, interaction.user.name)
+    if created:
+        await interaction.response.send_message(
+            "Profile created sucessfully! Use '/link_account' to link your game accounts"
+        )
+    else:
+        await interaction.response.send_message("You already have a profile!")
 
 
 @client.tree.command(
