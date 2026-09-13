@@ -165,8 +165,38 @@ async def profile(interaction: discord.Interaction):
     description="Link a game account to your profile",
     guild=GUILD_ID,
 )
-async def link_account(interaction: discord.Interaction):
-    await interaction.response.send_message("coming soon!")
+@app_commands.choices(
+    game=[
+        app_commands.Choice(name="League of Legends", value="lol"),
+    ]
+)
+async def link_account(
+    interaction: discord.Interaction,
+    game: app_commands.Choice[str],
+    game_name: str,
+    tagline: str,
+):
+    prof = await db.get_profile(interaction.user.id)
+    if prof is None:
+        await interaction.response.send_message(
+            "You need a profile first. Use `/create_profile`."
+        )
+        return
+
+    await interaction.response.defer()
+
+    try:
+        puuid = get_puuid(game_name, tagline)
+    except (ValueError, KeyError):
+        await interaction.followup.send(
+            f"Couldn't find {game_name}#{tagline}. Double-check the name and tagline."
+        )
+        return
+
+    await db.link_account(interaction.user.id, game.value, game_name, tagline, puuid)
+    await interaction.followup.send(
+        f"Linked {game.name} account: {game_name}#{tagline}"
+    )
 
 
 @client.tree.command(
