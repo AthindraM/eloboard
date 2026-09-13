@@ -140,7 +140,7 @@ async def profile(interaction: discord.Interaction):
     prof = await db.get_profile(interaction.user.id)
     if prof is None:
         await interaction.response.send_message(
-            "You don't have a profile yet! Use '/create_profile' to create one!"
+            "You don't have a profile yet! Use `/create_profile` to create one!"
         )
         return
 
@@ -148,7 +148,7 @@ async def profile(interaction: discord.Interaction):
     embed = discord.Embed(title=f"{prof['username']}'s Profile")
 
     if not accounts:
-        embed.description = "No linked accounts yet. Use '/link_account' to add one!"
+        embed.description = "No linked accounts yet. Use `/link_account` to add one!"
     else:
         for acc in accounts:
             embed.add_field(
@@ -167,7 +167,7 @@ async def profile(interaction: discord.Interaction):
 )
 @app_commands.choices(
     game=[
-        app_commands.Choice(name="League of Legends", value="lol"),
+        app_commands.Choice(name="League of Legends", value="League of Legends"),
     ]
 )
 async def link_account(
@@ -179,7 +179,7 @@ async def link_account(
     prof = await db.get_profile(interaction.user.id)
     if prof is None:
         await interaction.response.send_message(
-            "You need a profile first. Use `/create_profile`."
+            "You need a profile first! Use `/create_profile` to create one!"
         )
         return
 
