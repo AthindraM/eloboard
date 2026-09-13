@@ -150,12 +150,13 @@ async def profile(interaction: discord.Interaction):
     if not accounts:
         embed.description = "No linked accounts yet. Use `/link_account` to add one!"
     else:
+        by_game: dict[str, list[dict]] = {}
         for acc in accounts:
-            embed.add_field(
-                name=acc["game"],
-                value=f"{acc['game_name']}#{acc['tagline']}",
-                inline=False,
-            )
+            by_game.setdefault(acc["game"], []).append(acc)
+
+        for game, accs in by_game.items():
+            value = "\n".join(f"{a['game_name']}#{a['tagline']}" for a in accs)
+            embed.add_field(name=game, value=value, inline=False)
 
     await interaction.response.send_message(embed=embed)
 
@@ -199,26 +200,58 @@ async def link_account(
     )
 
 
+class UnlinkSelect(discord.ui.Select):
+    def __init__(self, accounts: list[dict]):
+        options = [
+            discord.SelectOption(
+                label=f"{acc['game_name']}#{acc['tagline']}",
+                description=acc["game"],
+                value=str(acc["id"]),
+            )
+            for acc in accounts
+        ]
+        super().__init__(
+            placeholder="Choose an account to unlink",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        account_id = int(self.values[0])
+        removed = await db.unlink_account_by_id(interaction.user.id, account_id)
+        if removed:
+            await interaction.response.edit_message(
+                content="Account unlinked.", view=None
+            )
+        else:
+            await interaction.response.edit_message(
+                content="Couldn't unlink that account.", view=None
+            )
+
+
+class UnlinkView(discord.ui.View):
+    def __init__(self, accounts: list[dict]):
+        super().__init__()
+        self.add_item(UnlinkSelect(accounts))
+
+
 @client.tree.command(
     name="unlink_account",
     description="Unlink a game account from your profile",
     guild=GUILD_ID,
 )
-@app_commands.choices(
-    game=[
-        app_commands.Choice(name="League of Legends", value="League of Legends"),
-    ]
-)
-async def unlink_account(
-    interaction: discord.Interaction, game: app_commands.Choice[str]
-):
-    removed = await db.unlink_account(interaction.user.id, game.value)
-    if removed:
-        await interaction.response.send_message(f"Unlinked your {game.name} account.")
-    else:
+async def unlink_account(interaction: discord.Interaction):
+    accounts = await db.get_linked_accounts(interaction.user.id)
+    if not accounts:
         await interaction.response.send_message(
-            f"You don't have a {game.name} account linked! Use `/link_account` to link one!"
+            "You don't have any linked accounts.", ephemeral=True
         )
+        return
+
+    await interaction.response.send_message(
+        "Select an account to unlink:", view=UnlinkView(accounts), ephemeral=True
+    )
 
 
 # --Leaderboard--

@@ -22,12 +22,13 @@ async def init_db(dsn: str):
         """)
         await conn.execute("""
             CREATE TABLE IF NOT EXISTS linked_accounts (
+                id SERIAL PRIMARY KEY,
                 discord_id BIGINT NOT NULL REFERENCES profiles (discord_id) ON DELETE CASCADE,
                 game TEXT NOT NULL,
                 game_name TEXT NOT NULL,
                 tagline TEXT NOT NULL,
-                puuid TEXT,
-                PRIMARY KEY (discord_id, game)
+                puuid TEXT NOT NULL, 
+                UNIQUE (discord_id, game, puuid)
             )
         """)
 
@@ -71,17 +72,16 @@ async def get_profile(discord_id: int) -> dict | None:
 
 
 async def link_account(
-    discord_id: int, game: str, game_name: str, tagline: str, puuid: str | None = None
+    discord_id: int, game: str, game_name: str, tagline: str, puuid: str
 ):
     async with _get_pool().acquire() as conn:
         await conn.execute(
             """
             INSERT INTO linked_accounts (discord_id, game, game_name, tagline, puuid)
             VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (discord_id, game) DO UPDATE SET
+            ON CONFLICT (discord_id, game, puuid) DO UPDATE SET
                 game_name = EXCLUDED.game_name,
-                tagline = EXCLUDED.tagline,
-                puuid = EXCLUDED.puuid
+                tagline = EXCLUDED.tagline
             """,
             discord_id,
             game,
@@ -91,12 +91,12 @@ async def link_account(
         )
 
 
-async def unlink_account(discord_id: int, game: str) -> bool:
+async def unlink_account_by_id(discord_id: int, account_id: int) -> bool:
     async with _get_pool().acquire() as conn:
         result = await conn.execute(
             "DELETE FROM linked_accounts WHERE discord_id = $1 AND game = $2",
+            account_id,
             discord_id,
-            game,
         )
         return result == "DELETE 1"
 
@@ -104,7 +104,7 @@ async def unlink_account(discord_id: int, game: str) -> bool:
 async def get_linked_accounts(discord_id: int) -> list[dict]:
     async with _get_pool().acquire() as conn:
         rows = await conn.fetch(
-            "SELECT game, game_name, tagline, puuid FROM linked_accounts WHERE discord_id = $1",
+            "SELECT id, game, game_name, tagline, puuid FROM linked_accounts WHERE discord_id = $1 ORDER BY game",
             discord_id,
         )
         return [dict(row) for row in rows]
