@@ -1,9 +1,9 @@
 import requests
-import db
 import discord
 from discord.ext import commands
 from discord import app_commands
 
+import db
 from token_and_keys import DISCORD_BOT_TOKEN, RIOT_API_KEY, POSTGRES_DSN
 
 
