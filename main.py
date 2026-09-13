@@ -120,7 +120,13 @@ async def create_profile(interaction: discord.Interaction):
     guild=GUILD_ID,
 )
 async def remove_profile(interaction: discord.Interaction):
-    await interaction.response.send_message("coming soon!")
+    removed = await db.remove_profile(interaction.user.id)
+    if removed:
+        await interaction.response.send_message(
+            "Your profile and linked accounts have been removed."
+        )
+    else:
+        await interaction.response.send_message("You dont have a profile yet!")
 
 
 @client.tree.command(
