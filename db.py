@@ -108,3 +108,17 @@ async def get_linked_accounts(discord_id: int) -> list[dict]:
             discord_id,
         )
         return [dict(row) for row in rows]
+
+
+async def get_all_linked_accounts_for_game(game: str) -> list[dict]:
+    async with _get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT la.discord_id, p.username, la.game_name, la.tagline, la.puuid
+            FROM linked_accounts la
+            JOIN profiles p ON p.discord_id = la.discord_id
+            WHERE la.game = $1
+            """,
+            game,
+        )
+        return [dict(row) for row in rows]

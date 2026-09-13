@@ -101,6 +101,12 @@ async def league_stats(interaction: discord.Interaction, game_name: str, tagline
 
 
 # --Profile & Account--
+GAME_DISPLAY_NAMES = {
+    "lol": "League of Legends",
+    "valorant": "Valorant",
+}
+
+
 @client.tree.command(
     name="create_profile",
     description="Creates a profile for your accounts",
@@ -155,8 +161,9 @@ async def profile(interaction: discord.Interaction):
             by_game.setdefault(acc["game"], []).append(acc)
 
         for game, accs in by_game.items():
+            display_name = GAME_DISPLAY_NAMES.get(game, game)
             value = "\n".join(f"{a['game_name']}#{a['tagline']}" for a in accs)
-            embed.add_field(name=game, value=value, inline=False)
+            embed.add_field(name=display_name, value=value, inline=False)
 
     await interaction.response.send_message(embed=embed)
 
@@ -168,7 +175,7 @@ async def profile(interaction: discord.Interaction):
 )
 @app_commands.choices(
     game=[
-        app_commands.Choice(name="League of Legends", value="League of Legends"),
+        app_commands.Choice(name="League of Legends", value="lol"),
     ]
 )
 async def link_account(
@@ -255,17 +262,107 @@ async def unlink_account(interaction: discord.Interaction):
 
 
 # --Leaderboard--
+TIER_ORDER = [
+    "IRON",
+    "BRONZE",
+    "SILVER",
+    "GOLD",
+    "PLATINUM",
+    "EMERALD",
+    "DIAMOND",
+    "MASTER",
+    "GRANDMASTER",
+    "CHALLENGER",
+]
+RANK_ORDER = {"IV": 0, "III": 1, "II": 2, "I": 3}
+
+
+def rank_sort_key(entry):
+    tier_index = TIER_ORDER.index(entry["tier"]) if entry["tier"] in TIER_ORDER else -1
+    rank_index = RANK_ORDER.get(entry.get("rank", ""), 0)
+    lp = entry.get("leaguePoints", 0)
+    return (tier_index, rank_index, lp)
+
+
+class QueueSelect(discord.ui.Select):
+    def __init__(self, game: str):
+        self.game = game
+        options = [
+            discord.SelectOption(label="Solo/Duo", value="RANKED_SOLO_5x5"),
+            discord.SelectOption(label="Flex", value="RANKED_FLEX_SR"),
+        ]
+        super().__init__(
+            placeholder="Choose a queue type:",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        queue_type = self.values[0]
+
+        accounts = await db.get_all_linked_accounts_for_game(self.game)
+        if not accounts:
+            await interaction.edit_original_response(
+                content="No accounts linked for this game yet!", view=None
+            )
+            return
+
+        entries = []
+        for acc in accounts:
+            rank_info = get_rank_info(acc["puuid"])
+            queue_entry = next(
+                (e for e in rank_info if e["queueType"] == queue_type), None
+            )
+            if queue_entry:
+                entries.append(
+                    {
+                        **queue_entry,
+                        "username": acc["username"],
+                        "game_name": acc["game_name"],
+                        "tagline": acc["tagline"],
+                    }
+                )
+
+        if not entries:
+            await interaction.edit_original_response(
+                content="No ranked data found for that queue.", view=None
+            )
+            return
+
+        entries.sort(key=rank_sort_key, reverse=True)
+
+        queue_label = "Solo/Duo" if queue_type == "RANKED_SOLO_5x5" else "Flex"
+        embed = discord.Embed(title=f"League of Legends — {queue_label} Leaderboard")
+        embed.description = "\n".join(
+            f"**{i}.** {e['username']} ({e['game_name']}#{e['tagline']}) — {e['tier']} {e['rank']} {e['leaguePoints']} LP"
+            for i, e in enumerate(entries, start=1)
+        )
+
+        await interaction.edit_original_response(content=None, embed=embed, view=None)
+
+
+class QueueView(discord.ui.View):
+    def __init__(self, game: str):
+        super().__init__()
+        self.add_item(QueueSelect(game))
+
+
 class Leaderboard(discord.ui.Select):
     def __init__(self):
         options = [
             discord.SelectOption(
-                label="League of Legends", description="Brings up the LoL leaderboard"
+                label="League of Legends",
+                value="lol",
+                description="Brings up the LoL leaderboard",
             ),
             discord.SelectOption(
-                label="Valorant", description="Brings up the Valorant leaderboard"
+                label="Valorant",
+                value="valorant",
+                description="Brings up the Valorant leaderboard",
             ),
         ]
-
         super().__init__(
             placeholder="Please choose a game:",
             min_values=1,
@@ -274,9 +371,15 @@ class Leaderboard(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message(
-            f"You picked {self.values[0]}\ncoming soon!"
-        )
+        game = self.values[0]
+        if game == "lol":
+            await interaction.response.edit_message(
+                content="Choose a queue type:", view=QueueView(game)
+            )
+        else:
+            await interaction.response.edit_message(
+                content="Valorant leaderboard coming soon!", view=None
+            )
 
 
 class LeaderboardView(discord.ui.View):
