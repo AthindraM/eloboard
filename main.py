@@ -1,3 +1,5 @@
+from os import name
+
 import requests
 import discord
 from discord.ext import commands
@@ -126,7 +128,7 @@ async def remove_profile(interaction: discord.Interaction):
             "Your profile and linked accounts have been removed."
         )
     else:
-        await interaction.response.send_message("You dont have a profile yet!")
+        await interaction.response.send_message("You don't have a profile yet!")
 
 
 @client.tree.command(
@@ -135,7 +137,27 @@ async def remove_profile(interaction: discord.Interaction):
     guild=GUILD_ID,
 )
 async def profile(interaction: discord.Interaction):
-    await interaction.response.send_message("coming soon!")
+    prof = await db.get_profile(interaction.user.id)
+    if prof is None:
+        await interaction.response.send_message(
+            "You don't have a profile yet! Use '/create_profile' to create one!"
+        )
+        return
+
+    accounts = await db.get_linked_accounts(interaction.user.id)
+    embed = discord.Embed(title=f"{prof['username']}'s Profile")
+
+    if not accounts:
+        embed.description = "No linked accounts yet. Use '/link_account' to add one!"
+    else:
+        for acc in accounts:
+            embed.add_field(
+                name=acc["game"],
+                value=f"{acc['game_name']}#{acc['tagline']}",
+                inline=False,
+            )
+
+    await interaction.response.send_message(embed=embed)
 
 
 @client.tree.command(
