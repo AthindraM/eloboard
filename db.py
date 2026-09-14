@@ -94,7 +94,7 @@ async def link_account(
 async def unlink_account_by_id(discord_id: int, account_id: int) -> bool:
     async with _get_pool().acquire() as conn:
         result = await conn.execute(
-            "DELETE FROM linked_accounts WHERE discord_id = $1 AND game = $2",
+            "DELETE FROM linked_accounts WHERE id = $1 AND discord_id = $2",
             account_id,
             discord_id,
         )
