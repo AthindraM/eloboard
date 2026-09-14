@@ -277,6 +277,21 @@ TIER_ORDER = [
 RANK_ORDER = {"IV": 0, "III": 1, "II": 2, "I": 3}
 
 
+def format_leaderboard_entry(rank: int, entry: dict) -> str:
+    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+    prefix = medals.get(rank, f"**#{rank}**")
+
+    wins = entry.get("wins", 0)
+    losses = entry.get("losses", 0)
+    total = wins + losses
+    winrate = round(wins / total * 100) if total > 0 else 0
+
+    name = f"{entry['game_name']}#{entry['tagline']}"
+    stat_line = f"{entry['tier']} {entry['rank']} {entry['leaguePoints']}LP  {wins}W {losses}L  {winrate}% WR"
+
+    return f"{prefix}\n```{name:<20}{stat_line:>0}```"
+
+
 def rank_sort_key(entry):
     tier_index = TIER_ORDER.index(entry["tier"]) if entry["tier"] in TIER_ORDER else -1
     rank_index = RANK_ORDER.get(entry.get("rank", ""), 0)
@@ -334,10 +349,9 @@ class QueueSelect(discord.ui.Select):
         entries.sort(key=rank_sort_key, reverse=True)
 
         queue_label = "Solo/Duo" if queue_type == "RANKED_SOLO_5x5" else "Flex"
-        embed = discord.Embed(title=f"League of Legends — {queue_label} Leaderboard")
+        embed = discord.Embed(title=f"🏆 League of Legends — {queue_label} Leaderboard")
         embed.description = "\n".join(
-            f"**{i}.** {e['username']} ({e['game_name']}#{e['tagline']}) — {e['tier']} {e['rank']} {e['leaguePoints']} LP"
-            for i, e in enumerate(entries, start=1)
+            format_leaderboard_entry(i, e) for i, e in enumerate(entries, start=1)
         )
 
         await interaction.edit_original_response(content=None, embed=embed, view=None)
