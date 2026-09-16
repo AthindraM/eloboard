@@ -126,7 +126,10 @@ async def profile(interaction: discord.Interaction):
         return
 
     accounts = await db.get_linked_accounts(interaction.user.id)
-    embed = discord.Embed(title=f"{prof['username']}'s Profile")
+    embed = discord.Embed(
+        title=f"{prof['username']}'s Profile", color=discord.Color(0x37DB91)
+    )
+    embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
     if not accounts:
         embed.description = "No linked accounts yet. Use `/link_account` to add one!"
@@ -137,7 +140,7 @@ async def profile(interaction: discord.Interaction):
 
         for game, accs in by_game.items():
             display_name = GAME_DISPLAY_NAMES.get(game, game)
-            value = "\n".join(f"{a['game_name']}#{a['tagline']}" for a in accs)
+            value = "\n".join(f"`{a['game_name']}#{a['tagline']}`" for a in accs)
             embed.add_field(name=display_name, value=value, inline=False)
 
     await interaction.response.send_message(embed=embed)
