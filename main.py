@@ -75,31 +75,6 @@ client = Client(command_prefix="!", intents=intents)
 
 GUILD_ID = discord.Object(id=1065303021925453835)
 
-
-@client.tree.command(
-    name="league_stats",
-    description="Brings up your League of Legends stats",
-    guild=GUILD_ID,
-)
-async def league_stats(interaction: discord.Interaction, game_name: str, tagline: str):
-    author_puuid = get_puuid(game_name, tagline)
-    rank_info = get_rank_info(author_puuid)
-    soloduo_rank = get_soloduo_rank(rank_info)
-    flex_rank = get_flex_rank(rank_info)
-
-    game_name = game_name.replace(" ", "")
-
-    embed = discord.Embed(
-        title=f"{game_name}#{tagline}'s OP.gg",
-        url=f"https://op.gg/lol/summoners/na/{game_name}-{tagline}",
-    )
-    embed.set_author(name=interaction.user.name)
-    embed.add_field(
-        name="Ranked Stats", value=f"Solo/Duo: {soloduo_rank}\nFlex: {flex_rank}"
-    )
-    await interaction.response.send_message(embed=embed)
-
-
 # --Profile & Account--
 GAME_DISPLAY_NAMES = {
     "lol": "League of Legends",
