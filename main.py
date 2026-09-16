@@ -324,9 +324,7 @@ class QueueSelect(discord.ui.Select):
         entries.sort(key=rank_sort_key, reverse=True)
 
         queue_label = "Solo/Duo" if queue_type == "RANKED_SOLO_5x5" else "Flex"
-        embed = discord.Embed(
-            title="🏆 Leaderboard",
-        )
+        embed = discord.Embed(title="🏆 Leaderboard", color=discord.Color(0x37DB91))
         embed.description = "\n".join(
             format_leaderboard_entry(i, e) for i, e in enumerate(entries, start=1)
         )
