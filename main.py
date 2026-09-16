@@ -52,9 +52,8 @@ class Client(commands.Bot):
         print(f"Logged on as {self.user}")
 
         try:
-            guild = discord.Object(id=1065303021925453835)
-            synced = await self.tree.sync(guild=guild)
-            print(f"Synced {len(synced)} commands to guild {guild.id}")
+            synced = await self.tree.sync()
+            print(f"Synced {len(synced)} commands globally")
 
         except Exception as e:
             print(f"Error syncing commands: {e}")
@@ -71,6 +70,7 @@ class Client(commands.Bot):
 # --- COMMANDS ---
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 client = Client(command_prefix="!", intents=intents)
 
 GUILD_ID = discord.Object(id=1065303021925453835)
@@ -85,7 +85,6 @@ GAME_DISPLAY_NAMES = {
 @client.tree.command(
     name="create_profile",
     description="Creates a profile for your accounts",
-    guild=GUILD_ID,
 )
 async def create_profile(interaction: discord.Interaction):
     created = await db.create_profile(interaction.user.id, interaction.user.name)
@@ -100,7 +99,6 @@ async def create_profile(interaction: discord.Interaction):
 @client.tree.command(
     name="remove_profile",
     description="Removes your profile",
-    guild=GUILD_ID,
 )
 async def remove_profile(interaction: discord.Interaction):
     removed = await db.remove_profile(interaction.user.id)
@@ -115,7 +113,6 @@ async def remove_profile(interaction: discord.Interaction):
 @client.tree.command(
     name="profile",
     description="Shows your profile stats and linked accounts",
-    guild=GUILD_ID,
 )
 async def profile(interaction: discord.Interaction):
     prof = await db.get_profile(interaction.user.id)
@@ -149,7 +146,6 @@ async def profile(interaction: discord.Interaction):
 @client.tree.command(
     name="link_account",
     description="Link a game account to your profile",
-    guild=GUILD_ID,
 )
 @app_commands.choices(
     game=[
@@ -224,7 +220,6 @@ class UnlinkView(discord.ui.View):
 @client.tree.command(
     name="unlink_account",
     description="Unlink a game account from your profile",
-    guild=GUILD_ID,
 )
 async def unlink_account(interaction: discord.Interaction):
     accounts = await db.get_linked_accounts(interaction.user.id)
@@ -293,9 +288,20 @@ class QueueSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
+
+        if interaction.guild is None:
+            await interaction.edit_original_response(
+                content="This command can only be used in a server.", view=None
+            )
+            return
+
         queue_type = self.values[0]
 
         accounts = await db.get_all_linked_accounts_for_game(self.game)
+
+        guild_member_ids = {member.id for member in interaction.guild.members}
+        accounts = [a for a in accounts if a["discord_id"] in guild_member_ids]
+
         if not accounts:
             await interaction.edit_original_response(
                 content="No accounts linked for this game yet!", view=None
@@ -368,10 +374,12 @@ class Leaderboard(discord.ui.Select):
             await interaction.response.edit_message(
                 content="Choose a queue type:", view=QueueView(game)
             )
-        else:
+        elif game == "valorant":
             await interaction.response.edit_message(
                 content="Valorant leaderboard coming soon!", view=None
             )
+        else:
+            await interaction.response.edit_message(content="Invalid input!", view=None)
 
 
 class LeaderboardView(discord.ui.View):
@@ -383,7 +391,6 @@ class LeaderboardView(discord.ui.View):
 @client.tree.command(
     name="leaderboard",
     description="Brings up the leaderboard of a game",
-    guild=GUILD_ID,
 )
 async def leaderboard(interaction: discord.Interaction):
     await interaction.response.send_message(view=LeaderboardView())
