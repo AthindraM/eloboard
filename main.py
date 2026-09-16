@@ -286,10 +286,10 @@ def format_leaderboard_entry(rank: int, entry: dict) -> str:
     total = wins + losses
     winrate = round(wins / total * 100) if total > 0 else 0
 
-    name = f"{entry['game_name']}#{entry['tagline']}"
+    name = f"{entry['game_name']}#{entry['tagline']}({entry['username']})"
     stat_line = f"{entry['tier']} {entry['rank']} {entry['leaguePoints']}LP  {wins}W {losses}L  {winrate}% WR"
 
-    return f"{prefix}\n```{name:<20}{stat_line:>0}```"
+    return f"{prefix}\n`{name:<35}{stat_line:>0}`"
 
 
 def rank_sort_key(entry):
@@ -349,7 +349,9 @@ class QueueSelect(discord.ui.Select):
         entries.sort(key=rank_sort_key, reverse=True)
 
         queue_label = "Solo/Duo" if queue_type == "RANKED_SOLO_5x5" else "Flex"
-        embed = discord.Embed(title=f"🏆 League of Legends — {queue_label} Leaderboard")
+        embed = discord.Embed(
+            title="🏆 Leaderboard",
+        )
         embed.description = "\n".join(
             format_leaderboard_entry(i, e) for i, e in enumerate(entries, start=1)
         )
