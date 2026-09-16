@@ -1,5 +1,5 @@
 # EloBoard
-A Discord bot made using Python to show a ranking of you and your friends.
+A Discord bot made using Python to show a leaderboard of you and your friends' ranks in your competitive games
 
 ## Games Supported
 - League of Legends
