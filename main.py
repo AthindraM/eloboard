@@ -286,7 +286,7 @@ def format_leaderboard_entry(rank: int, entry: dict) -> str:
     total = wins + losses
     winrate = round(wins / total * 100) if total > 0 else 0
 
-    name = f"{entry['game_name']}#{entry['tagline']}({entry['username']})"
+    name = f"{entry['game_name']}#{entry['tagline']} ({entry['username']})"
     stat_line = f"{entry['tier']} {entry['rank']} {entry['leaguePoints']}LP  {wins}W {losses}L  {winrate}% WR"
 
     return f"{prefix}\n`{name:<35}{stat_line:>0}`"
