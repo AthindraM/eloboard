@@ -20,13 +20,13 @@ def get_puuid(game_name, tagline):
     return puuid
 
 
-def get_rank_info(puuid):
+def get_lol_rank_info(puuid):
     response = requests.get(
         f"https://na1.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}?api_key={RIOT_API_KEY}"
     )
-    rank_info = response.json()
+    lol_rank_info = response.json()
 
-    return rank_info
+    return lol_rank_info
 
 
 def get_soloduo_rank(rank_info):
@@ -41,6 +41,15 @@ def get_flex_rank(rank_info):
     if entry is None:
         return "Unranked"
     return f"{entry['tier']} {entry['rank']} {entry['leaguePoints']} LP"
+
+
+def get_tft_rank_info(puuid):
+    response = requests.get(
+        f"https://na1.api.riotgames.com/tft/league/v1/entries/by-puuid/{puuid}?api_key={RIOT_API_KEY}"
+    )
+    tft_rank_info = response.json()
+
+    return tft_rank_info
 
 
 # --- BOT SETUP ---
@@ -310,7 +319,7 @@ class QueueSelect(discord.ui.Select):
 
         entries = []
         for acc in accounts:
-            rank_info = get_rank_info(acc["puuid"])
+            rank_info = get_lol_rank_info(acc["puuid"])
             queue_entry = next(
                 (e for e in rank_info if e["queueType"] == queue_type), None
             )
@@ -360,6 +369,11 @@ class Leaderboard(discord.ui.Select):
                 value="valorant",
                 description="Brings up the Valorant leaderboard",
             ),
+            discord.SelectOption(
+                label="Teamfight Tactics",
+                value="tft",
+                description="Brings up the Teamfight Tactics leaderboard",
+            ),
         ]
         super().__init__(
             placeholder="Please choose a game:",
@@ -377,6 +391,10 @@ class Leaderboard(discord.ui.Select):
         elif game == "valorant":
             await interaction.response.edit_message(
                 content="Valorant leaderboard coming soon!", view=None
+            )
+        elif game == "tft":
+            await interaction.response.edit_message(
+                content="Teamfight Tactics leaderboard coming soon!", view=None
             )
         else:
             await interaction.response.edit_message(content="Invalid input!", view=None)
