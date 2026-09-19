@@ -281,7 +281,7 @@ def rank_sort_key(entry):
     return (tier_index, rank_index, lp)
 
 
-class QueueSelect(discord.ui.Select):
+class LoLQueueSelect(discord.ui.Select):
     def __init__(self, game: str):
         self.game = game
         options = [
@@ -350,10 +350,10 @@ class QueueSelect(discord.ui.Select):
         await interaction.edit_original_response(content=None, embed=embed, view=None)
 
 
-class QueueView(discord.ui.View):
+class LoLQueueView(discord.ui.View):
     def __init__(self, game: str):
         super().__init__()
-        self.add_item(QueueSelect(game))
+        self.add_item(LoLQueueSelect(game))
 
 
 class Leaderboard(discord.ui.Select):
@@ -386,7 +386,7 @@ class Leaderboard(discord.ui.Select):
         game = self.values[0]
         if game == "lol":
             await interaction.response.edit_message(
-                content="Choose a queue type:", view=QueueView(game)
+                content="Choose a queue type:", view=LoLQueueView(game)
             )
         elif game == "valorant":
             await interaction.response.edit_message(
