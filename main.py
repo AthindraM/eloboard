@@ -357,7 +357,10 @@ class LoLQueueSelect(discord.ui.Select):
         entries.sort(key=rank_sort_key, reverse=True)
 
         queue_label = "Solo/Duo" if queue_type == "RANKED_SOLO_5x5" else "Flex"
-        embed = discord.Embed(title="🏆 Leaderboard", color=discord.Color(0x37DB91))
+        embed = discord.Embed(
+            title=f"🏆 League of Legends — {queue_label} Leaderboard",
+            color=discord.Color(0x37DB91),
+        )
         embed.description = "\n".join(
             format_leaderboard_entry(i, e) for i, e in enumerate(entries, start=1)
         )
@@ -378,10 +381,7 @@ async def build_tft_leaderboard(interaction: discord.Interaction):
         )
         return
 
-    accounts = await db.get_all_linked_accounts_for_game(
-        "lol"
-    )  # same Riot account covers TFT
-
+    accounts = await db.get_all_linked_accounts_for_game("lol")
     guild_member_ids = {member.id for member in interaction.guild.members}
     accounts = [a for a in accounts if a["discord_id"] in guild_member_ids]
 
@@ -415,7 +415,9 @@ async def build_tft_leaderboard(interaction: discord.Interaction):
 
     entries.sort(key=rank_sort_key, reverse=True)
 
-    embed = discord.Embed(title="🏆 TFT Leaderboard", color=discord.Color(0x37DB91))
+    embed = discord.Embed(
+        title="🏆 Teamfight Tactics Leaderboard", color=discord.Color(0x37DB91)
+    )
     embed.description = "\n".join(
         format_leaderboard_entry(i, e) for i, e in enumerate(entries, start=1)
     )
@@ -432,14 +434,14 @@ class Leaderboard(discord.ui.Select):
                 description="Brings up the LoL leaderboard",
             ),
             discord.SelectOption(
-                label="Valorant",
-                value="valorant",
-                description="Brings up the Valorant leaderboard",
-            ),
-            discord.SelectOption(
                 label="Teamfight Tactics",
                 value="tft",
                 description="Brings up the Teamfight Tactics leaderboard",
+            ),
+            discord.SelectOption(
+                label="Valorant",
+                value="valorant",
+                description="Brings up the Valorant leaderboard",
             ),
         ]
         super().__init__(
@@ -455,13 +457,13 @@ class Leaderboard(discord.ui.Select):
             await interaction.response.edit_message(
                 content="Choose a queue type:", view=LoLQueueView(game)
             )
+        elif game == "tft":
+            await interaction.response.defer()
+            await build_tft_leaderboard(interaction)
         elif game == "valorant":
             await interaction.response.edit_message(
                 content="Valorant leaderboard coming soon!", view=None
             )
-        elif game == "tft":
-            await interaction.response.defer()
-            await build_tft_leaderboard(interaction)
         else:
             await interaction.response.edit_message(content="Invalid input!", view=None)
 
